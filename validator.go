@@ -15,19 +15,19 @@ func (e ValidationError) Error() string {
 	return fmt.Sprintf("%v: %v", e.Message, e.Errors)
 }
 
-type Validation struct {
-	fieldValue      any
-	fieldName       string
-	results         []string
-	validatorsAdded []utils.ValidatorTypes
-	errs            []error
+type validator struct {
+	value            any
+	name             string
+	validationErrors []string
+	validators       []utils.ValidatorTypes
+	internalErrors   []error
 }
 
-func Compose(builders ...*Validation) (isSuccessful bool, err *ValidationError) {
+func Compose(builders ...*validator) (isSuccessful bool, err *ValidationError) {
 	m := make(map[string][]string)
 
 	for _, builder := range builders {
-		valid, values := builder.Builder()
+		valid, values := builder.Validate()
 		if valid || values == nil {
 			continue
 		}
@@ -48,42 +48,42 @@ func Compose(builders ...*Validation) (isSuccessful bool, err *ValidationError) 
 	return true, nil
 }
 
-func New(fieldName string, fiedlValue any) *Validation {
-	return &Validation{
-		fieldValue:      fiedlValue,
-		fieldName:       fieldName,
-		results:         []string{},
-		validatorsAdded: []utils.ValidatorTypes{},
+func New(fieldName string, fiedlValue any) *validator {
+	return &validator{
+		value:            fiedlValue,
+		name:             fieldName,
+		validationErrors: []string{},
+		validators:       []utils.ValidatorTypes{},
 	}
 }
 
-func (v *Validation) addValidation(errMsg string) {
-	v.results = append(v.results, errMsg)
+func (v *validator) addValidationError(errMsg string) {
+	v.validationErrors = append(v.validationErrors, errMsg)
 }
 
-func (v *Validation) addValidator(validatorTypes utils.ValidatorTypes) {
-	v.validatorsAdded = append(v.validatorsAdded, validatorTypes)
+func (v *validator) addValidator(validatorTypes utils.ValidatorTypes) {
+	v.validators = append(v.validators, validatorTypes)
 }
 
-func (v *Validation) addErrors(err error) {
-	v.errs = append(v.errs, err)
+func (v *validator) addInternalError(err error) {
+	v.internalErrors = append(v.internalErrors, err)
 }
 
-func (v *Validation) Builder() (isSuccessful bool, err *ValidationError) {
-	m := make(map[string][]string)
-	for _, err := range v.errs {
-		m["internal"] = append(m["internal"], fmt.Sprintf("%q: %q", v.fieldName, err.Error()))
+func (v *validator) Validate() (isSuccessful bool, err *ValidationError) {
+	errorsMap := make(map[string][]string)
+	for _, err := range v.internalErrors {
+		errorsMap["internal"] = append(errorsMap["internal"], fmt.Sprintf("%q: %q", v.name, err.Error()))
 	}
 
-	if len(v.results) > 0 {
-		m[v.fieldName] = v.results
+	if len(v.validationErrors) > 0 {
+		errorsMap[v.name] = v.validationErrors
 	}
 
-	for _, val := range m {
+	for _, val := range errorsMap {
 		if len(val) > 0 {
 			return false, &ValidationError{
-				Message: fmt.Sprintf("field %q is invalid", v.fieldName),
-				Errors:  m,
+				Message: fmt.Sprintf("field %q is invalid", v.name),
+				Errors:  errorsMap,
 			}
 		}
 	}

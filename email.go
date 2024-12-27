@@ -7,16 +7,16 @@ import (
 	"github.com/matheus-gondim/omega-validator/utils"
 )
 
-func (v *Validation) Email() *Validation {
+func (v *validator) Email() *validator {
 	v.addValidator(utils.Email)
-	str, ok := v.fieldValue.(string)
+	str, ok := v.value.(string)
 
-	if !ok || v.fieldValue == nil {
-		v.addErrors(fmt.Errorf("error validating if fields is email; field is not a string or is nil"))
+	if !ok || v.value == nil {
+		v.addInternalError(fmt.Errorf("error validating if fields is email; field is not a string or is nil"))
 		return v
 	}
 
-	required := utils.ContainsTypes(v.validatorsAdded, utils.Required)
+	required := utils.ContainsTypes(v.validators, utils.Required)
 	if str == "" && !required {
 		return v
 	}
@@ -25,7 +25,7 @@ func (v *Validation) Email() *Validation {
 	re := regexp.MustCompile(emailRegex)
 
 	if !re.MatchString(str) {
-		v.addValidation("email has format invalid")
+		v.addValidationError("email has format invalid")
 	}
 
 	return v

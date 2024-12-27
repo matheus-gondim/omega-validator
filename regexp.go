@@ -7,18 +7,19 @@ import (
 	"github.com/matheus-gondim/omega-validator/utils"
 )
 
-func (v *Validation) Regexp(expression string) *Validation {
+func (v *validator) Regexp(expression string) *validator {
 	v.addValidator(utils.Regexp)
 
-	str, ok := v.fieldValue.(string)
+	str, ok := v.value.(string)
 	if !ok {
-		v.addErrors(fmt.Errorf("error validating field with regular expression; field is not a string"))
+		v.addInternalError(fmt.Errorf("error validating field with regular expression; field is not a string"))
 		return v
 	}
 
-	required := utils.ContainsTypes(v.validatorsAdded, utils.Required)
+	required := utils.ContainsTypes(v.validators, utils.Required)
 
 	if !required && str == "" {
+		return v
 	}
 
 	re := regexp.MustCompile(expression)
@@ -26,7 +27,7 @@ func (v *Validation) Regexp(expression string) *Validation {
 		return v
 	}
 
-	v.addValidation("field does not match")
+	v.addValidationError("field does not match")
 
 	return v
 }

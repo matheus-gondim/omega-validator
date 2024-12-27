@@ -7,23 +7,23 @@ import (
 	"github.com/matheus-gondim/omega-validator/utils"
 )
 
-func (v *Validation) Max(value any) *Validation {
+func (v *validator) Max(value any) *validator {
 	v.addValidator(utils.Max)
 
-	required := utils.ContainsTypes(v.validatorsAdded, utils.Required)
+	required := utils.ContainsTypes(v.validators, utils.Required)
 
-	val := reflect.ValueOf(v.fieldValue)
+	val := reflect.ValueOf(v.value)
 	valueToCompare := reflect.ValueOf(value)
 
 	isMax, err := max(val, valueToCompare, required)
 
 	if err != nil {
-		v.addErrors(err)
+		v.addInternalError(err)
 		return v
 	}
 
 	if !isMax {
-		v.addValidation(fmt.Sprintf("field cannot be greater than %v", value))
+		v.addValidationError(fmt.Sprintf("field cannot be greater than %v", value))
 	}
 	return v
 }

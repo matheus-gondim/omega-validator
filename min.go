@@ -7,23 +7,23 @@ import (
 	"github.com/matheus-gondim/omega-validator/utils"
 )
 
-func (v *Validation) Min(value any) *Validation {
+func (v *validator) Min(value any) *validator {
 	v.addValidator(utils.Min)
 
-	required := utils.ContainsTypes(v.validatorsAdded, utils.Required)
+	required := utils.ContainsTypes(v.validators, utils.Required)
 
-	val := reflect.ValueOf(v.fieldValue)
+	val := reflect.ValueOf(v.value)
 	valueToCompare := reflect.ValueOf(value)
 
 	isMin, err := min(val, valueToCompare, required)
 
 	if err != nil {
-		v.addErrors(err)
+		v.addInternalError(err)
 		return v
 	}
 
 	if !isMin {
-		v.addValidation(fmt.Sprintf("field cannot be less than %v", value))
+		v.addValidationError(fmt.Sprintf("field cannot be less than %v", value))
 	}
 	return v
 }

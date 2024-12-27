@@ -8,16 +8,16 @@ import (
 	"github.com/matheus-gondim/omega-validator/utils"
 )
 
-func (v *Validation) FederalDocument() *Validation {
+func (v *validator) FederalDocument() *validator {
 	v.addValidator(utils.FederalDocument)
 
-	document, ok := v.fieldValue.(string)
+	document, ok := v.value.(string)
 	if !ok {
-		v.addErrors(fmt.Errorf("error validating field with federal document; field is not a string"))
+		v.addInternalError(fmt.Errorf("error validating field with federal document; field is not a string"))
 		return v
 	}
 
-	required := utils.ContainsTypes(v.validatorsAdded, utils.Required)
+	required := utils.ContainsTypes(v.validators, utils.Required)
 	if document == "" && !required {
 		return v
 	}
@@ -25,7 +25,7 @@ func (v *Validation) FederalDocument() *Validation {
 	cleanedDoc := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(document, ".", ""), "-", ""), "/", "")
 
 	if len(cleanedDoc) == 0 || strings.Count(cleanedDoc, string(cleanedDoc[0])) == len(cleanedDoc) {
-		v.addValidation("federal document is invalid")
+		v.addValidationError("federal document is invalid")
 		return v
 	}
 
@@ -44,7 +44,7 @@ func (v *Validation) FederalDocument() *Validation {
 		return v
 	}
 
-	v.addValidation("federal document is invalid")
+	v.addValidationError("federal document is invalid")
 	return v
 }
 

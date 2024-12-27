@@ -7,18 +7,18 @@ import (
 	"github.com/matheus-gondim/omega-validator/utils"
 )
 
-func (v *Validation) Contains(element any) *Validation {
+func (v *validator) Contains(element any) *validator {
 	v.addValidator(utils.Contains)
 
-	val := reflect.ValueOf(v.fieldValue)
+	val := reflect.ValueOf(v.value)
 	t := val.Type()
 
 	if t.Kind() != reflect.Array && t.Kind() != reflect.Slice && t.Kind() != reflect.Map {
-		v.addErrors(fmt.Errorf("error validating if field contains; unsupported type: %v", t.Kind()))
+		v.addInternalError(fmt.Errorf("error validating if field contains; unsupported type: %v", t.Kind()))
 		return v
 	}
 
-	required := utils.ContainsTypes(v.validatorsAdded, utils.Required)
+	required := utils.ContainsTypes(v.validators, utils.Required)
 
 	if !required && val.Len() == 0 {
 		return v
@@ -41,7 +41,7 @@ func (v *Validation) Contains(element any) *Validation {
 			}
 		}
 	default:
-		v.addErrors(fmt.Errorf("error validating if field contains; unsupported type: %v", t.Kind()))
+		v.addInternalError(fmt.Errorf("error validating if field contains; unsupported type: %v", t.Kind()))
 		return v
 	}
 
@@ -49,7 +49,7 @@ func (v *Validation) Contains(element any) *Validation {
 		return v
 	}
 
-	v.addValidation(fmt.Sprintf("field does not contain the specified element: %v", element))
+	v.addValidationError(fmt.Sprintf("field does not contain the specified element: %v", element))
 
 	return v
 }

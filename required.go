@@ -6,18 +6,18 @@ import (
 	"github.com/matheus-gondim/omega-validator/utils"
 )
 
-func (v *Validation) Required() *Validation {
+func (v *validator) Required() *validator {
 	v.addValidator(utils.Required)
 
-	val := reflect.ValueOf(v.fieldValue)
+	val := reflect.ValueOf(v.value)
 
 	isZero, err := utils.IsZeroValue(val)
 	if err != nil {
-		v.addErrors(err)
+		v.addInternalError(err)
 		return v
 	}
 	if isZero {
-		v.addValidation("field is required.")
+		v.addValidationError("field is required.")
 	}
 
 	return v
